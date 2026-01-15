@@ -1,4 +1,4 @@
-name: Selenium Test Suite CI/CD
+﻿name: Selenium Test Suite CI/CD
 
 on:
   push:
