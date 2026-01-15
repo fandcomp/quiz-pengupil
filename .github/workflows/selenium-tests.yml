@@ -69,8 +69,9 @@ jobs:
 
     - name: Setup test database
       run: |
-        mysql -h 127.0.0.1 -P 3306 -u root -proot quiz_pengupil_test < db/quiz_pengupil.sql || true
-        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "USE quiz_pengupil_test; SHOW TABLES;"
+        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "CREATE DATABASE IF NOT EXISTS quiz_pengupil_test;"
+        mysql -h 127.0.0.1 -P 3306 -u root -proot quiz_pengupil_test < db/setup_database.sql
+        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "USE quiz_pengupil_test; SHOW TABLES; SELECT * FROM users;"
 
     - name: Update database connection for testing
       run: |
@@ -90,18 +91,28 @@ jobs:
         cp koneksi.php koneksi_original.php
         cp koneksi_test.php koneksi.php
 
+    - name: Verify PHP can connect to database
+      run: |
+        php -r "require 'koneksi.php'; echo 'Database connection successful!';"
+
     - name: Install Chrome and ChromeDriver
       uses: browser-actions/setup-chrome@latest
       with:
         chrome-version: stable
+    
+    - name: Verify Chrome installation
+      run: |
+        google-chrome --version
+        which google-chrome
 
     - name: Run Selenium tests
       run: |
         mkdir -p test-reports
-        python -m pytest tests/ -v --tb=short --html=test-reports/report.html --self-contained-html --junitxml=test-reports/junit.xml || true
+        python -m pytest tests/ -v --tb=short --html=test-reports/report.html --self-contained-html --junitxml=test-reports/junit.xml
       env:
         BASE_URL: http://localhost:8000
-        HEADLESS: true
+        HEADLESS: "true"
+        CI: "true"
 
     - name: Upload test reports
       uses: actions/upload-artifact@v3
