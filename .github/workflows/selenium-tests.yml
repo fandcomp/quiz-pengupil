@@ -70,8 +70,21 @@ jobs:
     - name: Setup test database
       run: |
         mysql -h 127.0.0.1 -P 3306 -u root -proot -e "CREATE DATABASE IF NOT EXISTS quiz_pengupil_test;"
-        mysql -h 127.0.0.1 -P 3306 -u root -proot quiz_pengupil_test < db/setup_database.sql
-        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "USE quiz_pengupil_test; SHOW TABLES; SELECT * FROM users;"
+        mysql -h 127.0.0.1 -P 3306 -u root -proot quiz_pengupil_test << 'EOF'
+        CREATE TABLE IF NOT EXISTS users (
+          id int(11) NOT NULL AUTO_INCREMENT,
+          name varchar(70) NOT NULL,
+          username varchar(50) NOT NULL,
+          email varchar(50) NOT NULL,
+          password varchar(255) NOT NULL,
+          PRIMARY KEY (id)
+        ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        
+        INSERT INTO users (id, name, username, email, password) VALUES
+          (1, '', 'irul', 'irul@irul.com', '$2y$10$D9yc9Mt0t8niCNO9di8ejOUPib46suwHghqFnJKQJ3Z6uwRDxfw.'),
+          (2, '', 'ahmad', 'ahmad@ahmad.com', '$2y$10$OWez2au.UMnz3yedD0BqH.bsOC374XoV9VhMigepVzLyuq2jETHs2');
+        EOF
+        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "USE quiz_pengupil_test; SHOW TABLES; SELECT COUNT(*) as user_count FROM users;"
 
     - name: Update database connection for testing
       run: |
@@ -120,6 +133,7 @@ jobs:
       with:
         name: test-reports
         path: test-reports/
+        if-no-files-found: warn
 
     - name: Upload screenshots on failure
       uses: actions/upload-artifact@v4
@@ -127,6 +141,7 @@ jobs:
       with:
         name: failure-screenshots
         path: screenshots/
+        if-no-files-found: ignore
 
     - name: Stop PHP server
       if: always()
@@ -142,6 +157,7 @@ jobs:
         files: test-reports/junit.xml
         check_name: Test Results
         comment_title: Selenium Test Results
+      continue-on-error: true
 
     - name: Test Summary
       if: always()
