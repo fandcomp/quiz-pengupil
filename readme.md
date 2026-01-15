@@ -1,6 +1,6 @@
 # Quiz Pengupil - Automated Testing Suite
 
-[![Selenium Test Suite CI/CD](https://github.com/YOUR_USERNAME/quiz-pengupil/actions/workflows/selenium-tests.yml/badge.svg)](https://github.com/YOUR_USERNAME/quiz-pengupil/actions/workflows/selenium-tests.yml)
+[![Selenium Test Suite CI/CD](https://github.com/fandcomp/quiz-pengupil/actions/workflows/selenium-tests.yml/badge.svg)](https://github.com/fandcomp/quiz-pengupil/actions/workflows/selenium-tests.yml)
 
 Proyek ini merupakan aplikasi quiz dengan sistem autentikasi (login & register) yang dilengkapi dengan automated testing menggunakan Selenium WebDriver.
 
@@ -59,7 +59,7 @@ Lihat dokumentasi lengkap di [TEST_CASES.md](TEST_CASES.md)
 
 1. **Clone repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/quiz-pengupil.git
+   git clone https://github.com/fandcomp/quiz-pengupil.git
    cd quiz-pengupil
    ```
 
@@ -222,7 +222,7 @@ Test suite mencakup:
 
 ## 👥 Kontributor
 
-- **Nama Anda** - [GitHub Profile](https://github.com/YOUR_USERNAME)
+- **fandcomp** - [GitHub Profile](https://github.com/fandcomp)
 
 ## 📝 Lisensi
 
@@ -230,12 +230,10 @@ Proyek ini dibuat untuk keperluan pembelajaran - Pengujian Perangkat Lunak, Poli
 
 ## 🔗 Repository Link
 
-**GitHub Repository**: [https://github.com/YOUR_USERNAME/quiz-pengupil](https://github.com/YOUR_USERNAME/quiz-pengupil)
+**GitHub Repository**: [https://github.com/fandcomp/quiz-pengupil](https://github.com/fandcomp/quiz-pengupil)
 
 ## 📞 Kontak
 
 Jika ada pertanyaan atau saran, silakan buka issue di repository ini.
 
 ---
-
-**Note**: Jangan lupa untuk mengganti `YOUR_USERNAME` dengan username GitHub Anda di semua link dan badge di atas.
