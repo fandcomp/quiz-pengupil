@@ -69,8 +69,7 @@ jobs:
 
     - name: Setup test database
       run: |
-        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "CREATE DATABASE IF NOT EXISTS quiz_pengupil_test;"
-        mysql -h 127.0.0.1 -P 3306 -u root -proot quiz_pengupil_test << 'EOF'
+        mysql -h 127.0.0.1 -P 3306 -u root -proot quiz_pengupil_test -e "
         CREATE TABLE IF NOT EXISTS users (
           id int(11) NOT NULL AUTO_INCREMENT,
           name varchar(70) NOT NULL,
@@ -81,9 +80,9 @@ jobs:
         ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
         
         INSERT INTO users (id, name, username, email, password) VALUES
-          (1, '', 'irul', 'irul@irul.com', '$2y$10$D9yc9Mt0t8niCNO9di8ejOUPib46suwHghqFnJKQJ3Z6uwRDxfw.'),
-          (2, '', 'ahmad', 'ahmad@ahmad.com', '$2y$10$OWez2au.UMnz3yedD0BqH.bsOC374XoV9VhMigepVzLyuq2jETHs2');
-        EOF
+          (1, '', 'irul', 'irul@irul.com', '\$2y\$10\$D9yc9Mt0t8niCNO9di8ejOUPib46suwHghqFnJKQJ3Z6uwRDxfw.'),
+          (2, '', 'ahmad', 'ahmad@ahmad.com', '\$2y\$10\$OWez2au.UMnz3yedD0BqH.bsOC374XoV9VhMigepVzLyuq2jETHs2');
+        "
         mysql -h 127.0.0.1 -P 3306 -u root -proot -e "USE quiz_pengupil_test; SHOW TABLES; SELECT COUNT(*) as user_count FROM users;"
 
     - name: Update database connection for testing
