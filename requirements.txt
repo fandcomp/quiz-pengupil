@@ -1,0 +1,7 @@
+# Python Test Dependencies
+selenium==4.15.2
+pytest==7.4.3
+pytest-html==4.1.1
+pytest-metadata==3.0.0
+webdriver-manager==4.0.1
+mysql-connector-python==8.2.0

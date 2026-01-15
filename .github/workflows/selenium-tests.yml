@@ -1,0 +1,144 @@
+name: Selenium Test Suite CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: quiz_pengupil_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mysqli, pdo_mysql
+        ini-values: post_max_size=256M, max_execution_time=180
+        coverage: none
+
+    - name: Start PHP built-in server
+      run: |
+        cd ${{ github.workspace }}
+        php -S localhost:8000 -t . &
+        echo $! > php_server.pid
+        sleep 3
+      env:
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: quiz_pengupil_test
+        DB_USERNAME: root
+        DB_PASSWORD: root
+
+    - name: Wait for MySQL to be ready
+      run: |
+        for i in {1..30}; do
+          if mysqladmin ping -h"127.0.0.1" -P"3306" -u"root" -p"root" --silent; then
+            echo "MySQL is ready"
+            break
+          fi
+          echo "Waiting for MySQL... ($i/30)"
+          sleep 2
+        done
+
+    - name: Setup test database
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -u root -proot quiz_pengupil_test < db/quiz_pengupil.sql || true
+        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "USE quiz_pengupil_test; SHOW TABLES;"
+
+    - name: Update database connection for testing
+      run: |
+        cat > koneksi_test.php << 'EOF'
+        <?php
+            $host     = '127.0.0.1';
+            $user     = 'root'; 
+            $password = 'root';                  
+            $db       = 'quiz_pengupil_test';
+
+            $con = mysqli_connect($host, $user, $password, $db);
+            if (!$con) { 
+                die("Connection failed: " . mysqli_connect_error());    
+            }
+        ?>
+        EOF
+        cp koneksi.php koneksi_original.php
+        cp koneksi_test.php koneksi.php
+
+    - name: Install Chrome and ChromeDriver
+      uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: stable
+
+    - name: Run Selenium tests
+      run: |
+        mkdir -p test-reports
+        python -m pytest tests/ -v --tb=short --html=test-reports/report.html --self-contained-html --junitxml=test-reports/junit.xml || true
+      env:
+        BASE_URL: http://localhost:8000
+        HEADLESS: true
+
+    - name: Upload test reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-reports
+        path: test-reports/
+
+    - name: Upload screenshots on failure
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: failure-screenshots
+        path: screenshots/
+
+    - name: Stop PHP server
+      if: always()
+      run: |
+        if [ -f php_server.pid ]; then
+          kill $(cat php_server.pid) || true
+        fi
+
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: test-reports/junit.xml
+        check_name: Test Results
+        comment_title: Selenium Test Results
+
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f test-reports/junit.xml ]; then
+          echo "Test results available in artifacts" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No test results found" >> $GITHUB_STEP_SUMMARY
+        fi
