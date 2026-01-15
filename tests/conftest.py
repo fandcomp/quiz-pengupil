@@ -1,15 +1,20 @@
 """
 Test Configuration dan Fixtures
 """
+import os
 import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from tests.database_stub import DatabaseStub
 
+# Conditional import for webdriver-manager (not needed in CI)
+if not os.getenv('CI'):
+    from webdriver_manager.chrome import ChromeDriverManager
 
-import os
+# Conditional import for database stub (not needed in CI)
+if not os.getenv('CI'):
+    from tests.database_stub import DatabaseStub
+
 
 # Test Configuration
 BASE_URL = os.getenv('BASE_URL', 'http://localhost:8000')
@@ -24,10 +29,14 @@ def db_stub():
         yield None
         return
     
+    # Import here to avoid import errors in CI
+    from tests.database_stub import DatabaseStub
+    
     stub = DatabaseStub()
     stub.setup_test_database()
     stub.seed_default_users()
     yield stub
+    stub.close()
     stub.close()
 
 
@@ -58,20 +67,26 @@ def driver():
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--disable-notifications")
     chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     
     # Untuk CI/CD, gunakan Chrome yang sudah terinstall
     if os.getenv('CI'):
         driver = webdriver.Chrome(options=chrome_options)
     else:
         # Local development, gunakan webdriver-manager
+        from webdriver_manager.chrome import ChromeDriverManager
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
     
     driver.implicitly_wait(10)
+    driver.set_page_load_timeout(30)
     
     yield driver
     
-    driver.quit()
+    try:
+        driver.quit()
+    except:
+        pass
 
 
 @pytest.fixture(scope="function")

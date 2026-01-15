@@ -112,19 +112,25 @@ jobs:
       with:
         chrome-version: stable
     
+    - name: Install Chrome dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libnss3 libatk-bridge2.0-0 libgbm1 libasound2
+    
     - name: Verify Chrome installation
       run: |
         google-chrome --version
-        which google-chrome
+        which google-chrome || which chromium-browser || which chromium
 
     - name: Run Selenium tests
       run: |
-        mkdir -p test-reports
-        python -m pytest tests/ -v --tb=short --html=test-reports/report.html --self-contained-html --junitxml=test-reports/junit.xml
+        mkdir -p test-reports screenshots
+        python -m pytest tests/ -v -s --tb=short --html=test-reports/report.html --self-contained-html --junitxml=test-reports/junit.xml
       env:
         BASE_URL: http://localhost:8000
         HEADLESS: "true"
         CI: "true"
+      continue-on-error: false
 
     - name: Upload test reports
       uses: actions/upload-artifact@v4
